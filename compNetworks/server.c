@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>        // For close()
+#include <arpa/inet.h>     // For inet_addr() and socket functions
+#include <sys/socket.h>    // For socket functions
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/hmac.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
 
 #define PORT 8080
 #define SECRET_KEY "mysecretkey" // Pre-shared key for HMAC
@@ -43,8 +44,8 @@ void communicate(SSL *ssl) {
     char buffer[1024];
     int bytes_received = SSL_read(ssl, buffer, sizeof(buffer) - 1);
     if (bytes_received <= 0) {
-    perror("Failed to read message from client");
-    exit(1);
+        perror("Failed to read message from client");
+        exit(1);
     }
 
     buffer[bytes_received] = '\0'; // Null-terminate received data
@@ -60,12 +61,11 @@ void communicate(SSL *ssl) {
     SSL_write(ssl, hmac_result, hmac_len);
 
     printf("Sent message with HMAC verification\n");
+
+    sleep(1);
 }
 
 int main() {
-    WSADATA wsa;
-    WSAStartup(MAKEWORD(2, 2), &wsa);
-
     SSL_load_error_strings();
     OpenSSL_add_ssl_algorithms();
 
@@ -73,10 +73,10 @@ int main() {
     if (!ctx) handle_errors("Failed to create SSL context");
 
     if (!SSL_CTX_use_certificate_file(ctx, "certs/server.crt", SSL_FILETYPE_PEM))
-    handle_errors("Failed to load server certificate");
+        handle_errors("Failed to load server certificate");
 
     if (!SSL_CTX_use_PrivateKey_file(ctx, "certs/server.key", SSL_FILETYPE_PEM))
-    handle_errors("Failed to load server private key");
+        handle_errors("Failed to load server private key");
 
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == -1) handle_errors("Socket creation failed");
@@ -94,7 +94,7 @@ int main() {
     printf("Server listening on port %d...\n", PORT);
 
     struct sockaddr_in client_addr;
-    int client_len = sizeof(client_addr);
+    socklen_t client_len = sizeof(client_addr);  // Use `socklen_t` for Linux
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
     if (client_fd == -1) handle_errors("Accept failed");
 
@@ -111,8 +111,9 @@ int main() {
     // Cleanup
     SSL_shutdown(ssl);
     SSL_free(ssl);
-    closesocket(client_fd);
-    closesocket(server_fd);
+    close(client_fd);
+    close(server_fd);
     SSL_CTX_free(ctx);
-    WSACleanup();
+    printf("Connection closed\n");
 }
+

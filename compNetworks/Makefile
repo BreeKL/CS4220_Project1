@@ -1,14 +1,10 @@
-# Makefile for building client and server, generating certificates, and linking OpenSSL & Winsock libraries
-
-# Paths for OpenSSL and WinSock
-OPENSSL_DIR = /path/to/openssl
-WINSOCK_LIB = -lws2_32
+# Makefile for building client and server, generating certificates, and linking OpenSSL on Linux
 
 # Source and output files
 SERVER_SRC = server.c
-SERVER_OUT = server.exe
+SERVER_OUT = server
 CLIENT_SRC = client.c
-CLIENT_OUT = client.exe
+CLIENT_OUT = client
 
 # Certificate and key files
 CLIENT_CERT = certs/client.crt
@@ -23,7 +19,7 @@ OPENSSL = openssl
 # Compiler and flags
 CC = gcc
 CFLAGS = -Wall
-LDFLAGS = -lssl -lcrypto $(WINSOCK_LIB)
+LDFLAGS = -lssl -lcrypto
 
 # All targets
 all: $(SERVER_OUT) $(CLIENT_OUT) $(SERVER_CERT) $(SERVER_KEY) $(CLIENT_CERT) $(CLIENT_KEY)
@@ -59,3 +55,4 @@ clean:
 	rm -f $(SERVER_OUT) $(CLIENT_OUT) $(SERVER_CERT) $(SERVER_KEY) $(CLIENT_CERT) $(CLIENT_KEY)
 
 .PHONY: all clean
+
