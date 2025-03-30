@@ -11,11 +11,13 @@
 #define PORT 8080
 #define SECRET_KEY "mysecretkey" // Pre-shared key for HMAC
 
+// Function to handle errors
 void handle_errors(const char *msg) {
     fprintf(stderr, "%s: %s\n", msg, ERR_error_string(ERR_get_error(), NULL));
     exit(EXIT_FAILURE);
 }
 
+// HMAC function to ensure data integrity
 void compute_hmac(const char *message, unsigned char *hmac_result, unsigned int *hmac_len) {
     HMAC_CTX *ctx = HMAC_CTX_new();
     if (!ctx) handle_errors("Failed to create HMAC context");
@@ -32,6 +34,7 @@ void compute_hmac(const char *message, unsigned char *hmac_result, unsigned int 
     HMAC_CTX_free(ctx);
 }
 
+// Begin communication from the server
 void communicate(SSL *ssl) {
     char response[] = "Hello from Server";
     unsigned char hmac_result[EVP_MAX_MD_SIZE];
@@ -51,33 +54,40 @@ void communicate(SSL *ssl) {
     buffer[bytes_received] = '\0'; // Null-terminate received data
     printf("Message from client: %s\n", buffer);
 
-    // Send message
+    // Send error message
     if (SSL_write(ssl, response, strlen(response)) <= 0) {
         perror("Failed to send response to client");
         exit(1);
     }
 
-    // Send HMAC
+    // Send HMAC and confirmation
     SSL_write(ssl, hmac_result, hmac_len);
 
     printf("Sent message with HMAC verification\n");
 
-    sleep(1);
+    sleep(1); // Ensure client has time to receive HMAC verification
+	      // before ending connection
 }
 
+// Main function for Server
 int main() {
+    // Initialize OpenSSL functions
     SSL_load_error_strings();
     OpenSSL_add_ssl_algorithms();
 
+    // Create SSL context
     SSL_CTX *ctx = SSL_CTX_new(TLS_server_method());
     if (!ctx) handle_errors("Failed to create SSL context");
 
+    // Load server certificate
     if (!SSL_CTX_use_certificate_file(ctx, "certs/server.crt", SSL_FILETYPE_PEM))
         handle_errors("Failed to load server certificate");
 
+    // Load server key
     if (!SSL_CTX_use_PrivateKey_file(ctx, "certs/server.key", SSL_FILETYPE_PEM))
         handle_errors("Failed to load server private key");
 
+    // Create socket and connect to server
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == -1) handle_errors("Socket creation failed");
 
@@ -98,6 +108,7 @@ int main() {
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
     if (client_fd == -1) handle_errors("Accept failed");
 
+    // Connect to SSL
     SSL *ssl = SSL_new(ctx);
     SSL_set_fd(ssl, client_fd);
 
