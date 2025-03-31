@@ -50,3 +50,19 @@ created using the winsock2 library; however, Linux creates them differently
 using the sys/socket library. Sockets could be treated similarly once 
 created. Additionally, the Makefile needed to be changed to create different
 executable files. Windows needs .exe files, while Linux uses .o files. 
+
+
+RESOURCES USED:
+===============
+There were several resources that were used to help guide us through the
+project, below is a list of the ones used.
+http://cslibrary.stanford.edu/
+https://www.oreilly.com/library/view/demystifying-cryptography-with/9781800560345/B16767_10_Final_AM.xhtml#_idParaDest-198%20%C2%A0
+https://knowledge.digicert.com/general-information/openssl-quick-reference-guide
+These resources helped to complete the project and guide us through
+the process of writing the code. The clibrary helped to learn about commands 
+that we weren't already familiar with and how to integrate them into the 
+project. The oreilly library on cryptography helped with understanding 
+TLS and how to implement the TLS handshake, and the openssl reference guide 
+showed the commands that we needed and how to use them properly.
+
