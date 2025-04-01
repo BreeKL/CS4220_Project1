@@ -79,6 +79,14 @@ int main() {
     SSL_CTX *ctx = SSL_CTX_new(TLS_server_method());
     if (!ctx) handle_errors("Failed to create SSL context");
 
+    // Require client certificate verification
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+
+    // Load the Certificate Authority (CA) that issued the client's certificate
+    if (!SSL_CTX_load_verify_locations(ctx, "certs/ca.crt", NULL)) {
+        handle_errors("Failed to load CA certificate for client verification");
+    }
+
     // Load server certificate
     if (!SSL_CTX_use_certificate_file(ctx, "certs/server.crt", SSL_FILETYPE_PEM))
         handle_errors("Failed to load server certificate");
@@ -115,6 +123,14 @@ int main() {
     if (SSL_accept(ssl) <= 0) handle_errors("SSL accept failed");
 
     printf("Client connected!\n");
+
+    // Verify client certificate
+    X509 *client_cert = SSL_get_peer_certificate(ssl);
+    if (client_cert) {
+        X509_free(client_cert);
+    } else {
+        handle_errors("Client did not provide a valid certificate");
+    }
 
     // Communicate with client
     communicate(ssl);

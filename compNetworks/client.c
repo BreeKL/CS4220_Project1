@@ -87,10 +87,14 @@ int main() {
         handle_errors("Client private key does not match the certificate public key");
     }
 
-    // Load server certificate as CA certificate for validation
-    if (!SSL_CTX_load_verify_locations(ctx, "certs/server.crt", NULL)) {
+    // Load the server's certificate authority (CA) file
+    if (!SSL_CTX_load_verify_locations(ctx, "certs/ca.crt", NULL)) {
         handle_errors("Failed to load CA certificate");
     }
+
+    // Set the verification mode to check the server's certificate
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);  // SSL_VERIFY_PEER will verify the server certificate
+
 
     // Create socket
     sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -122,6 +126,14 @@ int main() {
 
     // Print the connection details
     printf("Connected with %s encryption\n", SSL_get_cipher(ssl));
+
+    // Check if the server's certificate is valid
+    X509 *server_cert = SSL_get_peer_certificate(ssl);
+    if (server_cert == NULL) {
+        handle_errors("Server did not present a certificate");
+    } else {
+        X509_free(server_cert);
+    }
 
     // Send a message to the server
     const char *message = "Hello, Server!";
