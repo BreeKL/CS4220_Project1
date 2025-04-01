@@ -89,4 +89,13 @@ worked. Also, the Stanford CS library was helpful to find C functions, and
 https://knowledge.digicert.com/general-information/openssl-quick-reference-guide
 helped with using OpenSSL to create the certificates. 
 
+It did take a little time to figure out how to create a self-signed Certificate
+Authority (CA) in order to create CA certificates that both the client and 
+server would be able to trust. This was essential to create a mutual 
+certificate authentication, because otherwise neither the client nor server
+would recognize the other's certificate as valid. The following Medium 
+article had some good ideas about how to self-sign a CA and create a CSR 
+(Certificate Signing Request) to generate a CA-signed certificate:
+https://medium.com/@talyitzhak/understanding-digital-certificates-and-self-signed-certificates-b1cdca759bbc
+
 
